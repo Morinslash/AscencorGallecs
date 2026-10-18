@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f6f3">
+<title>AscensorGallecs · Estado del ascensor</title>
+<style>
+/* Shared tokens: candidates for the Blazor app stylesheet. */
+:root{color-scheme:light;--page:#f4f6f3;--surface:#fff;--ink:#20332d;--muted:#67766f;--line:#e4e9e3;--green:#237552;--green-soft:#eaf5ed;--red:#b74444;--red-soft:#fbefed;--radius:24px;--shadow:0 12px 40px #25372c06}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}button{font:inherit}svg{display:block;flex-shrink:0}button:focus-visible,a:focus-visible{outline:3px solid #315ec7;outline-offset:5px}
+/* Page shell */
+.page{width:min(100% - 40px,620px);margin:0 auto;padding:38px 0 24px}.brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}.brand-mark{width:44px;height:44px;background:var(--ink);color:white;border-radius:14px;display:grid;place-items:center}.brand-name{font-size:19px;font-weight:750;letter-spacing:-.7px}.brand-caption{font-size:12px;color:var(--muted);margin-top:1px}.page-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.eyebrow{font-size:11px;font-weight:750;letter-spacing:1.6px;text-transform:uppercase;margin:0;color:var(--muted)}.date{font-size:12px;color:var(--muted)}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+/* CurrentStatus */
+.status-card{padding:28px;position:relative;overflow:hidden}.status-card:before{content:"";position:absolute;left:0;top:27px;bottom:27px;width:4px;background:var(--green);border-radius:0 4px 4px 0}.status-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.status-pill{display:inline-flex;align-items:center;gap:7px;border-radius:30px;padding:5px 10px;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:700}.dot{width:6px;height:6px;border-radius:50%;background:currentColor}.time-range{color:var(--muted);font-size:12px}.status-content{display:flex;align-items:center;gap:19px;margin:25px 0 22px}.status-icon{width:72px;height:72px;display:grid;place-items:center;background:var(--green-soft);border:1px solid #d7eadd;border-radius:22px;color:var(--green)}h1{font-size:clamp(30px,7vw,39px);line-height:1.1;letter-spacing:-1.5px;margin:0 0 7px;font-weight:750}.status-subtitle{margin:0;font-size:14px;color:var(--muted)}.report-summary{border-top:1px solid var(--line);padding-top:19px}.summary-label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:12px;color:var(--muted)}.summary-label strong{font-weight:650;color:var(--ink)}.vote-meter{height:7px;background:var(--red-soft);border-radius:8px;display:flex;overflow:hidden;gap:3px}.vote-meter .yes{width:65.789%;background:var(--green);border-radius:8px}.vote-meter .no{flex:1;background:#cf7770;border-radius:8px}.vote-counts{display:flex;justify-content:space-between;gap:12px;margin-top:9px;font-size:12px;color:var(--muted)}.vote-counts strong{font-weight:750;color:var(--ink)}.vote-counts span{display:flex;align-items:center;gap:6px}.mini-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}.mini-dot.red{background:#cf7770}
+/* ReportActions — visual only; no submission logic. */
+.report-section{margin:26px 0}.report-section h2{font-size:19px;letter-spacing:-.5px;margin:0 0 3px}.section-description{font-size:13px;color:var(--muted);margin:0}.report-buttons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}.report-button{min-height:88px;border-radius:18px;border:1px solid;display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 10px;cursor:pointer;transition:background .15s,transform .15s}.report-button.yes{background:var(--green);color:#fff;border-color:var(--green)}.report-button.no{background:var(--surface);color:var(--red);border-color:#e7d6d1}.report-button.yes:hover{background:#1b6244}.report-button.no:hover{background:var(--red-soft)}.report-button:active{transform:translateY(1px)}.button-copy{text-align:left;display:block}.button-title{display:block;font-size:17px;line-height:1.3;font-weight:700}.button-detail{display:block;font-size:11px;margin-top:3px;opacity:.85}.privacy-note{text-align:center;color:var(--muted);font-size:11px;margin:12px 0 0}
+/* HourlyTimeline */
+.timeline-card{padding:23px 24px}.section-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:5px}.section-heading h2{font-size:16px;letter-spacing:-.4px;margin:0}.today-badge{font-size:11px;background:var(--page);border:1px solid var(--line);padding:3px 9px;border-radius:20px;color:var(--muted)}.timeline-description{font-size:12px;margin:0;color:var(--muted)}.timeline{padding:0;margin:24px 0 0;list-style:none;display:grid;grid-template-columns:repeat(17,minmax(0,1fr));gap:5px}.hour{text-align:center;position:relative}.hour-bar{display:block;height:43px;border-radius:5px;background:#edf0eb;border:1px solid #e6eae3}.hour.ok .hour-bar{background:#74ae89;border-color:#74ae89}.hour.down .hour-bar{background:#d88c82;border-color:#d88c82}.hour.current .hour-bar{background:var(--green);border-color:var(--green);outline:2px solid var(--green);outline-offset:3px}.hour-label{display:block;font-size:10px;color:var(--muted);margin-top:10px;font-variant-numeric:tabular-nums}.hour.current .hour-label{color:var(--green);font-weight:800}.legend{display:flex;flex-wrap:wrap;gap:15px;margin-top:20px;padding-top:15px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}.legend span{display:flex;align-items:center;gap:6px}.legend-key{width:8px;height:8px;display:inline-block;border-radius:2px;background:#74ae89}.legend-key.down{background:#d88c82}.legend-key.empty{background:#edf0eb;border:1px solid #dfe4db}.timeline-note{font-size:11px;color:var(--muted);margin:12px 0 0;line-height:1.6}.footer{text-align:center;margin-top:25px;font-size:11px;color:var(--muted)}.footer p{margin:4px 0}.prototype-label{display:inline-block;font-size:10px;padding:3px 8px;border:1px dashed #cbd3c8;border-radius:6px;margin-top:8px;letter-spacing:.3px}
+@media(min-width:700px){.page{padding-top:52px}.brand{margin-bottom:38px}.status-card{padding:30px 32px}.status-content{margin:29px 0 26px}.report-button{min-height:91px}.hour-bar{height:48px}}
+@media(max-width:380px){.page{width:calc(100% - 28px);padding-top:24px}.status-card{padding:22px}.status-icon{width:59px;height:59px;border-radius:18px}.status-content{gap:13px}.timeline-card{padding:21px 18px}.timeline{gap:4px}.hour-label{font-size:9px}.hour:nth-child(even):not(.current) .hour-label{visibility:hidden}.legend{gap:10px}.time-range{font-size:11px}.button-title{font-size:15px}.report-button{gap:7px}.vote-counts{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<!-- Static prototype. All counts, hours and states are illustrative. -->
+<div class="page">
+<header class="brand">
+ <div class="brand-mark" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M12 4v16M7 10l2-3 2 3M13 14l2 3 2-3"/></svg></div>
+ <div><div class="brand-name">AscensorGallecs</div><div class="brand-caption">La información la compartimos entre vecinos.</div></div>
+</header>
+<main>
+ <div class="page-heading"><p class="eyebrow">Estado del ascensor</p><span class="date">Hoy · 17 oct.</span></div>
+ <!-- CurrentStatus: majority and counts for the current hour only. -->
+ <section class="card status-card" aria-labelledby="current-status">
+  <div class="status-top"><span class="status-pill"><span class="dot" aria-hidden="true"></span>Mayoría de esta hora</span><span class="time-range">16:00–17:00</span></div>
+  <div class="status-content"><div class="status-icon" aria-hidden="true"><svg width="36" height="36" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m8 16 5 5L24 10"/></svg></div><div><h1 id="current-status">Funciona</h1><p class="status-subtitle">Según los avisos de los vecinos.</p></div></div>
+  <div class="report-summary">
+   <div class="summary-label"><span>Avisos de 16:00 a 17:00</span><strong>76 en total</strong></div>
+   <div class="vote-meter" aria-hidden="true"><span class="yes"></span><span class="no"></span></div>
+   <div class="vote-counts"><span><i class="mini-dot" aria-hidden="true"></i><strong>50</strong> funciona</span><span><i class="mini-dot red" aria-hidden="true"></i><strong>26</strong> no funciona</span></div>
+  </div>
+ </section>
+ <!-- ReportActions: intentionally no event handlers or API calls. -->
+ <section class="report-section" aria-labelledby="report-title">
+  <h2 id="report-title">¿Funciona ahora?</h2><p class="section-description">Comparte lo que ves y ayuda a tus vecinos.</p>
+  <div class="report-buttons">
+   <button class="report-button yes" type="button" aria-label="Sí, el ascensor funciona. Botón de muestra sin acción."><svg aria-hidden="true" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span class="button-copy"><span class="button-title">Sí, funciona</span><span class="button-detail">Todo en orden</span></span></button>
+   <button class="report-button no" type="button" aria-label="No, el ascensor no funciona. Botón de muestra sin acción."><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg><span class="button-copy"><span class="button-title">No funciona</span><span class="button-detail">Hay un problema</span></span></button>
+  </div>
+  <p class="privacy-note">Maqueta visual: los botones no envían avisos.</p>
+ </section>
+ <!-- HourlyTimeline: one entry per hour, 07:00 through 23:00 inclusive. -->
+ <section class="card timeline-card" aria-labelledby="timeline-title">
+  <div class="section-heading"><h2 id="timeline-title">Así va el día</h2><span class="today-badge">Hoy</span></div>
+  <p class="timeline-description">Estado más reportado en cada hora · 07:00–23:00</p>
+  <ol class="timeline" aria-label="Historial de estados por hora"><li class="hour ok" aria-label="07:00–08:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">07</span></li>
+<li class="hour ok" aria-label="08:00–09:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">08</span></li>
+<li class="hour ok" aria-label="09:00–10:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">09</span></li>
+<li class="hour down" aria-label="10:00–11:00: No funciona"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">10</span></li>
+<li class="hour down" aria-label="11:00–12:00: No funciona"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">11</span></li>
+<li class="hour ok" aria-label="12:00–13:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">12</span></li>
+<li class="hour ok" aria-label="13:00–14:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">13</span></li>
+<li class="hour ok" aria-label="14:00–15:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">14</span></li>
+<li class="hour ok" aria-label="15:00–16:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">15</span></li>
+<li class="hour ok current" aria-label="16:00–17:00: Funciona, hora actual"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">16</span></li>
+<li class="hour empty" aria-label="17:00–18:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">17</span></li>
+<li class="hour empty" aria-label="18:00–19:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">18</span></li>
+<li class="hour empty" aria-label="19:00–20:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">19</span></li>
+<li class="hour empty" aria-label="20:00–21:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">20</span></li>
+<li class="hour empty" aria-label="21:00–22:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">21</span></li>
+<li class="hour empty" aria-label="22:00–23:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">22</span></li>
+<li class="hour empty" aria-label="23:00–24:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span class="hour-label" aria-hidden="true">23</span></li></ol>
+  <div class="legend" aria-hidden="true"><span><i class="legend-key"></i>Funciona</span><span><i class="legend-key down"></i>No funciona</span><span><i class="legend-key empty"></i>Sin datos</span></div>
+  <p class="timeline-note">La hora actual aparece resaltada. Cada bloque resume los avisos de esa hora, no un estado verificado en tiempo real.</p>
+ </section>
+</main>
+<footer class="footer"><p>Hecho para los vecinos de Gallecs.</p><p>Información vecinal, no un servicio oficial de mantenimiento.</p><span class="prototype-label">Vista de ejemplo · Datos ficticios</span></footer>
+</div>
+</body>
+</html>

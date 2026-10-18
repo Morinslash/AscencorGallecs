@@ -1,7 +1,29 @@
 ﻿@page "/"
-
-<PageTitle>Home</PageTitle>
-
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
+@using Web.Components
+<div class="page">
+ <header class="brand">
+  <div class="brand-mark" aria-hidden="true">
+   <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+        stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="3" width="16" height="18" rx="3"/>
+    <path d="M12 4v16M7 10l2-3 2 3M13 14l2 3 2-3"/>
+   </svg>
+  </div>
+  <div>
+   <div class="brand-name">AscensorGallecs</div>
+   <div class="brand-caption">La información la compartimos entre vecinos.</div>
+  </div>
+ </header>
+ <main>
+  <div class="page-heading"><p class="eyebrow">Estado del ascensor</p><span class="date">Hoy · 17 oct.</span></div>
+  <!-- CurrentStatus: majority and counts for the current hour only. -->
+  <CurrentStatus/>
+  <!-- ReportActions: intentionally no event handlers or API calls. -->
+  <Report/>
+  <!-- HourlyTimeline: one entry per hour, 07:00 through 23:00 inclusive. -->
+  <Timeline/>
+ </main>
+ <footer class="footer"><p>Hecho para los vecinos de Gallecs.</p>
+  <p>Información vecinal, no un servicio oficial de mantenimiento.</p><span class="prototype-label">Vista de ejemplo · Datos ficticios</span>
+ </footer>
+</div>
