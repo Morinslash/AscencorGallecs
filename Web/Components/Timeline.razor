@@ -1,45 +1,126 @@
+@using Web.Models
 <section class="card timeline-card" aria-labelledby="timeline-title">
-  <div class="section-heading"><h2 id="timeline-title">Así va el día</h2><span class="today-badge">Hoy</span></div>
-  <p class="timeline-description">Estado más reportado en cada hora · 07:00–23:00</p>
-  <ol class="timeline" aria-label="Historial de estados por hora">
-    <li class="hour ok" aria-label="07:00–08:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">07</span></li>
-    <li class="hour ok" aria-label="08:00–09:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">08</span></li>
-    <li class="hour ok" aria-label="09:00–10:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">09</span></li>
-    <li class="hour down" aria-label="10:00–11:00: No funciona"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">10</span></li>
-    <li class="hour down" aria-label="11:00–12:00: No funciona"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">11</span></li>
-    <li class="hour ok" aria-label="12:00–13:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">12</span></li>
-    <li class="hour ok" aria-label="13:00–14:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">13</span></li>
-    <li class="hour ok" aria-label="14:00–15:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">14</span></li>
-    <li class="hour ok" aria-label="15:00–16:00: Funciona"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">15</span></li>
-    <li class="hour ok current" aria-label="16:00–17:00: Funciona, hora actual"><span class="hour-bar"
-                                                                                      aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">16</span></li>
-    <li class="hour empty" aria-label="17:00–18:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">17</span></li>
-    <li class="hour empty" aria-label="18:00–19:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">18</span></li>
-    <li class="hour empty" aria-label="19:00–20:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">19</span></li>
-    <li class="hour empty" aria-label="20:00–21:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">20</span></li>
-    <li class="hour empty" aria-label="21:00–22:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">21</span></li>
-    <li class="hour empty" aria-label="22:00–23:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">22</span></li>
-    <li class="hour empty" aria-label="23:00–24:00: Sin datos"><span class="hour-bar" aria-hidden="true"></span><span
-        class="hour-label" aria-hidden="true">23</span></li>
-  </ol>
-  <div class="legend" aria-hidden="true"><span><i class="legend-key"></i>Funciona</span><span><i
-        class="legend-key down"></i>No funciona</span><span><i class="legend-key empty"></i>Sin datos</span></div>
-  <p class="timeline-note">La hora actual aparece resaltada. Cada bloque resume los avisos de esa hora, no un estado
-    verificado en tiempo real.</p>
+    <div class="section-heading">
+        <h2 id="timeline-title">Así va el día</h2>
+        <span class="today-badge">Hoy</span>
+    </div>
+
+    <p class="timeline-description">
+        Estado por hora · 07:00–23:00
+    </p>
+
+    <ol class="timeline" aria-label="Historial de estados por hora">
+        @for (var hour = 7; hour < 23; hour++)
+        {
+            var isFuture = hour > CurrentHour;
+            var isCurrent = hour == CurrentHour;
+
+            var report = isFuture
+                ? null
+                : Reports.GetReportForHour(hour);
+
+            var statusClass = GetStatusClass(report);
+
+            var itemClass =
+                $"hour {statusClass}" +
+                (isCurrent ? " current" : "") +
+                (report?.IsCarriedForward == true ? " carried" : "");
+
+            var description = GetDescription(hour, report, isFuture);
+
+            if (isCurrent)
+            {
+                description += ", hora actual";
+            }
+
+            <li @key="hour"
+                class="@itemClass"
+                aria-label="@description"
+                title="@description">
+                <span class="hour-bar" aria-hidden="true"></span>
+                <span class="hour-label" aria-hidden="true">
+                    @hour.ToString("00")
+                </span>
+            </li>
+        }
+    </ol>
+
+    <div class="legend" aria-hidden="true">
+        <span>
+            <i class="legend-key"></i>
+            Funciona
+        </span>
+        <span>
+            <i class="legend-key down"></i>
+            No funciona
+        </span>
+        <span>
+            <i class="legend-key tied"></i>
+            Sin mayoría
+        </span>
+        <span>
+            <i class="legend-key empty"></i>
+            Sin datos
+        </span>
+        <span>
+            <i class="legend-key carried"></i>
+            Estado anterior
+        </span>
+    </div>
+
+    <p class="timeline-note">
+        La hora actual aparece resaltada. Las franjas indican un estado
+        arrastrado de una hora anterior. Las horas futuras quedan vacías.
+        Información vecinal, no verificada en tiempo real.
+    </p>
 </section>
+
+@code {
+    [Parameter, EditorRequired]
+    public DailyReports Reports { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public int CurrentHour { get; set; }
+
+    private static string GetStatusClass(HourlyReportResult? report) =>
+        report?.Status switch
+        {
+            ElevatorStatus.Working => "ok",
+            ElevatorStatus.NotWorking => "down",
+            ElevatorStatus.NoMajority => "tied",
+            _ => "empty"
+        };
+
+    private static string GetDescription(
+        int hour,
+        HourlyReportResult? report,
+        bool isFuture)
+    {
+        var interval = $"{hour:00}:00–{hour + 1:00}:00";
+
+        if (isFuture)
+        {
+            return $"{interval}: hora futura";
+        }
+
+        if (report is null || report.Status == ElevatorStatus.NoData)
+        {
+            return $"{interval}: sin datos";
+        }
+
+        var status = report.Status switch
+        {
+            ElevatorStatus.Working => "funciona",
+            ElevatorStatus.NotWorking => "no funciona",
+            ElevatorStatus.NoMajority => "sin mayoría",
+            _ => "sin datos"
+        };
+
+        var source = report.IsCarriedForward
+            ? $"Sin avisos en esta hora. Últimos avisos: {report.SourceHour:00}:00–{report.SourceHour + 1:00}:00."
+            : "Avisos de esta hora.";
+
+        return $"{interval}: {status}. {source} " +
+               $"{report.YesCount} sí, {report.NoCount} no.";
+    }
+}
