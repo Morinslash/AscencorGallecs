@@ -1,5 +1,8 @@
 ﻿@page "/"
 @using Web.Components
+@using System.Globalization
+@using Web.Models
+
 <div class="page">
  <header class="brand">
   <div class="brand-mark" aria-hidden="true">
@@ -15,8 +18,34 @@
   </div>
  </header>
  <main>
-  <div class="page-heading"><p class="eyebrow">Estado del ascensor</p><span class="date">Hoy · 17 oct.</span></div>
+  <div class="page-heading"><p class="eyebrow">Estado del ascensor</p><span
+    class="date">Hoy · @Today.ToString("d MMM", _spanishCulture)</span></div>
   <!-- CurrentStatus: majority and counts for the current hour only. -->
+  <div>
+   <p>Hora actual: @CurrentHour:00</p>
+   <p>Estado calculado: @CurrentReport.Status</p>
+
+   @if (CurrentReport.SourceHour is int sourceHour)
+   {
+    <p>
+     Avisos de las @sourceHour:00:
+     @CurrentReport.YesCount sí /
+     @CurrentReport.NoCount no.
+    </p>
+
+    @if (CurrentReport.IsCarriedForward)
+    {
+     <p>
+      Sin avisos en esta hora.
+      Se muestra el último estado conocido.
+     </p>
+    }
+   }
+   else
+   {
+    <p>Todavía no hay avisos para hoy.</p>
+   }
+  </div>
   <CurrentStatus/>
   <!-- ReportActions: intentionally no event handlers or API calls. -->
   <Report/>
@@ -27,3 +56,37 @@
   <p>Información vecinal, no un servicio oficial de mantenimiento.</p><span class="prototype-label">Vista de ejemplo · Datos ficticios</span>
  </footer>
 </div>
+
+@code {
+ private readonly DateTime _now = DateTime.Now;
+
+ private readonly CultureInfo _spanishCulture =
+  CultureInfo.GetCultureInfo("es-ES");
+
+ private DateOnly Today => DateOnly.FromDateTime(_now);
+
+ private int CurrentHour => _now.Hour;
+
+ private DailyReports _reports = new();
+
+ protected override void OnInitialized()
+ {
+  _reports = new DailyReports
+  {
+   Date = Today,
+   Hours =
+   [
+    new HourlyReports { Hour = 7, YesCount = 8, NoCount = 2 },
+    new HourlyReports { Hour = 8, YesCount = 12, NoCount = 3 },
+    new HourlyReports { Hour = 9, YesCount = 4, NoCount = 9 },
+    new HourlyReports { Hour = 12, YesCount = 15, NoCount = 2 },
+    new HourlyReports { Hour = 14, YesCount = 3, NoCount = 10 },
+    new HourlyReports { Hour = 16, YesCount = 18, NoCount = 4 }
+   ]
+  };
+ }
+
+ private HourlyReportResult CurrentReport =>
+  _reports.GetReportForHour(CurrentHour);
+
+}
