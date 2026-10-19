@@ -5,12 +5,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Controllers\" />
+        <Compile Include="Models/Reports.fs" />
+        <Compile Include="Data/Database.fs" />
+        <Compile Include="Data/ReportStore.fs" />
+        <Compile Include="Configuration/RateLimiting.fs" />
+        <Compile Include="Controllers/ReportsController.fs" />
         <Compile Include="Program.fs"/>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Web\Web.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     </ItemGroup>
 
 </Project>

@@ -1,0 +1,23 @@
+@baseUrl = http://localhost:5008
+
+### Read today's reports
+GET {{baseUrl}}/api/reports/today
+Accept: application/json
+
+### Report working
+POST {{baseUrl}}/api/reports
+Content-Type: application/json
+
+"yes"
+
+### Report not working
+POST {{baseUrl}}/api/reports
+Content-Type: application/json
+
+"no"
+
+### Invalid answer
+POST {{baseUrl}}/api/reports
+Content-Type: application/json
+
+"maybe"

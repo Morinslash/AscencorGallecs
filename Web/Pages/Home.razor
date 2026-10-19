@@ -2,69 +2,182 @@
 @using Web.Components
 @using System.Globalization
 @using Web.Models
+@using System.Net.Http.Json
+@using System.Text.Json
+@inject HttpClient Http
+@using System.Net
 
 <div class="page">
- <header class="brand">
-  <div class="brand-mark" aria-hidden="true">
-   <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-        stroke-linecap="round" stroke-linejoin="round">
-    <rect x="4" y="3" width="16" height="18" rx="3"/>
-    <path d="M12 4v16M7 10l2-3 2 3M13 14l2 3 2-3"/>
-   </svg>
-  </div>
-  <div>
-   <div class="brand-name">AscensorGallecs</div>
-   <div class="brand-caption">La información la compartimos entre vecinos.</div>
-  </div>
- </header>
- <main>
-  <div class="page-heading"><p class="eyebrow">Estado del ascensor</p><span
-    class="date">Hoy · @Today.ToString("d MMM", _spanishCulture)</span></div>
-  <!-- CurrentStatus: majority and counts for the current hour only. -->
-  <CurrentStatus Report="@CurrentReport"/>
-  <!-- ReportActions: intentionally no event handlers or API calls. -->
-  <Report
-   IsOutsideOperatingHours="@CurrentReport.IsOutsideOperatingHours"/>
-  <!-- HourlyTimeline: one entry per hour, 07:00 through 23:00 inclusive. -->
-  <Timeline Reports="@_reports"
-            CurrentHour="@CurrentHour"/>
- </main>
- <footer class="footer"><p>Hecho para los vecinos de Gallecs.</p>
-  <p>Información vecinal, no un servicio oficial de mantenimiento.</p><span class="prototype-label">Vista de ejemplo · Datos ficticios</span>
- </footer>
+    <header class="brand">
+        <div class="brand-mark" aria-hidden="true">
+            <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="3" width="16" height="18" rx="3"/>
+                <path d="M12 4v16M7 10l2-3 2 3M13 14l2 3 2-3"/>
+            </svg>
+        </div>
+        <div>
+            <div class="brand-name">AscensorGallecs</div>
+            <div class="brand-caption">La información la compartimos entre vecinos.</div>
+        </div>
+    </header>
+    <main>
+        <div class="page-heading"><p class="eyebrow">Estado del ascensor</p><span
+                class="date">Hoy · @Today.ToString("d MMM", _spanishCulture)</span></div>
+        @if (_isLoading)
+        {
+            <p role="status">Cargando los avisos de hoy…</p>
+        }
+        else if (_loadError is not null)
+        {
+            <p role="alert">@_loadError</p>
+        }
+        else
+        {
+            <!-- CurrentStatus: majority and counts for the current hour only. -->
+            <CurrentStatus Report="@CurrentReport"/>
+            <!-- ReportActions: intentionally no event handlers or API calls. -->
+            <Report
+                IsOutsideOperatingHours="@CurrentReport.IsOutsideOperatingHours"
+                IsSubmitting="@_isSubmitting"
+                FeedbackMessage="@_submissionMessage"
+                OnReport="SubmitReportAsync"/>
+            <!-- HourlyTimeline: one entry per hour, 07:00 through 23:00 inclusive. -->
+            <Timeline Reports="@_reports"
+                      CurrentHour="@CurrentHour"/>
+        }
+    </main>
+    <footer class="footer"><p>Hecho para los vecinos de Gallecs.</p>
+        <p>Información vecinal, no un servicio oficial de mantenimiento.</p><span class="prototype-label">Vista de ejemplo · Datos ficticios</span>
+    </footer>
 </div>
 
 @code {
- private readonly DateTime _now = DateTime.Now;
+    private readonly DateTime _now = DateTime.Now;
 
- private readonly CultureInfo _spanishCulture =
-  CultureInfo.GetCultureInfo("es-ES");
+    private readonly CultureInfo _spanishCulture =
+        CultureInfo.GetCultureInfo("es-ES");
 
- private DateOnly Today => DateOnly.FromDateTime(_now);
+    private DateOnly Today => DateOnly.FromDateTime(_now);
 
- private int CurrentHour => _now.Hour;
+    private int CurrentHour => _now.Hour;
 
- private DailyReports _reports = new();
+    private DailyReports _reports = new();
+    private bool _isLoading = true;
+    private string? _loadError;
 
- protected override void OnInitialized()
- {
-  _reports = new DailyReports
-  {
-   Date = Today,
-   Hours =
-   [
-    new HourlyReports { Hour = 7, YesCount = 8, NoCount = 2 },
-    new HourlyReports { Hour = 8, YesCount = 12, NoCount = 3 },
-    new HourlyReports { Hour = 9, YesCount = 4, NoCount = 9 },
-    new HourlyReports { Hour = 12, YesCount = 15, NoCount = 2 },
-    new HourlyReports { Hour = 14, YesCount = 3, NoCount = 10 },
-    new HourlyReports { Hour = 16, YesCount = 18, NoCount = 24 },
-    new HourlyReports { Hour = 18, YesCount = 36, NoCount = 24 }
-   ]
-  };
- }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var reports =
+                await Http.GetFromJsonAsync<DailyReports>(
+                    "api/reports/today");
 
- private HourlyReportResult CurrentReport =>
-  _reports.GetReportForHour(CurrentHour);
+            if (reports is null)
+            {
+                _loadError = "El servidor no ha devuelto los datos del día.";
+                return;
+            }
+
+            _reports = reports;
+        }
+        catch (HttpRequestException)
+        {
+            _loadError =
+                "No se han podido cargar los avisos. Inténtalo de nuevo más tarde.";
+        }
+        catch (JsonException)
+        {
+            _loadError =
+                "La respuesta del servidor no tiene el formato esperado.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private HourlyReportResult CurrentReport =>
+        _reports.GetReportForHour(CurrentHour);
+
+    private bool _isSubmitting;
+    private string? _submissionMessage;
+
+    private async Task SubmitReportAsync(bool isWorking)
+    {
+        if (_isSubmitting || CurrentReport.IsOutsideOperatingHours)
+        {
+            return;
+        }
+
+        _isSubmitting = true;
+        _submissionMessage = null;
+
+        try
+        {
+            var answer = isWorking ? "yes" : "no";
+
+            using var response =
+                await Http.PostAsJsonAsync("api/reports", answer);
+
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                var retryAfter = response.Headers.RetryAfter?.Delta;
+
+                _submissionMessage = retryAfter is { } delay
+                    ? $"Has enviado demasiados avisos. Espera {Math.Max(1, (int)Math.Ceiling(delay.TotalSeconds))} segundos antes de volver a intentarlo."
+                    : "Has enviado demasiados avisos. Espera un momento antes de volver a intentarlo.";
+
+                return;
+            }
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                _submissionMessage =
+                    "No se ha aceptado el aviso. Solo se permiten avisos de 07:00 a 23:00.";
+
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _submissionMessage =
+                    "El servidor no ha podido confirmar el aviso. Inténtalo más tarde.";
+
+                return;
+            }
+
+            var reports =
+                await response.Content.ReadFromJsonAsync<DailyReports>();
+
+            if (reports is null)
+            {
+                _submissionMessage =
+                    "Aviso enviado, pero no se ha podido actualizar la pantalla. Recarga la página.";
+
+                return;
+            }
+
+            _reports = reports;
+
+            _submissionMessage =
+                "Gracias. Tu aviso se ha registrado.";
+        }
+        catch (HttpRequestException)
+        {
+            _submissionMessage =
+                "No se ha podido confirmar el envío. Recarga la página para comprobar los avisos antes de repetirlo.";
+        }
+        catch (JsonException)
+        {
+            _submissionMessage =
+                "El aviso puede haberse registrado, pero no se ha podido leer la respuesta. Recarga la página.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
 
 }

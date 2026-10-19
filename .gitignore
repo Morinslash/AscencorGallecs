@@ -576,3 +576,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains+all,windows,macos,linux,dotnetcore,fsharp,csharp
+
+# Local SQLite database and companion files
+**/App_Data/*.db
+**/App_Data/*.db-*

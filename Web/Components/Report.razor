@@ -17,7 +17,8 @@
     <div class="report-buttons">
         <button class="report-button yes"
                 type="button"
-                disabled="@IsOutsideOperatingHours"
+                disabled="@ButtonsDisabled"
+                @onclick="ReportWorking"
                 aria-describedby="report-description report-note">
             <svg aria-hidden="true"
                  width="23"
@@ -28,7 +29,7 @@
                  stroke-width="2"
                  stroke-linecap="round"
                  stroke-linejoin="round">
-                <path d="m5 12 4 4L19 6" />
+                <path d="m5 12 4 4L19 6"/>
             </svg>
 
             <span class="button-copy">
@@ -39,7 +40,8 @@
 
         <button class="report-button no"
                 type="button"
-                disabled="@IsOutsideOperatingHours"
+                disabled="@ButtonsDisabled"
+                @onclick="ReportNotWorking"
                 aria-describedby="report-description report-note">
             <svg aria-hidden="true"
                  width="22"
@@ -49,7 +51,7 @@
                  stroke="currentColor"
                  stroke-width="2"
                  stroke-linecap="round">
-                <path d="m6 6 12 12M18 6 6 18" />
+                <path d="m6 6 12 12M18 6 6 18"/>
             </svg>
 
             <span class="button-copy">
@@ -59,12 +61,37 @@
         </button>
     </div>
 
-    <p class="privacy-note" id="report-note">
-        Maqueta visual: los botones no envían avisos.
+    <p class="submission-feedback"
+       id="report-note"
+       role="status"
+       aria-live="polite">
+        @if (IsSubmitting)
+        {
+            <text>Enviando aviso…</text>
+        }
+        else
+        {
+            @FeedbackMessage
+        }
     </p>
 </section>
 
 @code {
-    [Parameter, EditorRequired]
-    public bool IsOutsideOperatingHours { get; set; }
+    [Parameter, EditorRequired] public bool IsOutsideOperatingHours { get; set; }
+
+    [Parameter] public bool IsSubmitting { get; set; }
+
+    [Parameter] public string? FeedbackMessage { get; set; }
+
+    [Parameter] public EventCallback<bool> OnReport { get; set; }
+
+    private bool ButtonsDisabled =>
+        IsOutsideOperatingHours || IsSubmitting;
+
+    private Task ReportWorking() =>
+        OnReport.InvokeAsync(true);
+
+    private Task ReportNotWorking() =>
+        OnReport.InvokeAsync(false);
+
 }

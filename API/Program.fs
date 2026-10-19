@@ -1,33 +1,40 @@
 namespace API
-#nowarn "20"
-open System
-open System.Collections.Generic
+
 open System.IO
-open System.Linq
-open System.Threading.Tasks
-open Microsoft.AspNetCore
+open API.Data
+open API.Configuration
 open Microsoft.AspNetCore.Builder
-open Microsoft.AspNetCore.Hosting
-open Microsoft.AspNetCore.HttpsPolicy
-open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
-open Microsoft.Extensions.Hosting
-open Microsoft.Extensions.Logging
 
 module Program =
-    let exitCode = 0
 
     [<EntryPoint>]
     let main args =
-
         let builder = WebApplication.CreateBuilder(args)
 
+        let databasePath =
+            Path.Combine(builder.Environment.ContentRootPath, "App_Data", "ascensorgallecs.db")
+
+        builder.Services.AddControllers() |> ignore
+
+        builder.Services.AddSingleton<ReportStore>(fun _ -> ReportStore(databasePath))
+        |> ignore
+
+        RateLimiting.configure builder.Services
+        
         let app = builder.Build()
 
-        app.MapStaticAssets()
+        Database.initialize databasePath
+        
+        app.UseRouting() |> ignore
+        app.UseRateLimiter() |> ignore
+        
+        app.MapControllers() |> ignore
+
+        app.MapStaticAssets() |> ignore
 
         app.MapFallbackToFile("index.html") |> ignore
-        
+
         app.Run()
 
-        exitCode
+        0

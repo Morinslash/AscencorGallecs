@@ -217,24 +217,40 @@ h1 {
 
 .status-card {
     --status-color: var(--green);
-    --status-background: var(--green-soft);
-    --status-border: #d7eadd;
+    --status-background: #dcefe2;
+    --status-border: #c6e1cf;
+    --status-card-background: #edf7ef;
+    --status-divider: #d1e5d7;
 
     position: relative;
     overflow: hidden;
     padding: 28px;
+    background: var(--status-card-background);
+    border-color: var(--status-border);
 }
 
 .status-card.status-down {
     --status-color: var(--red);
-    --status-background: var(--red-soft);
-    --status-border: #e7d6d1;
+    --status-background: #f5dedd;
+    --status-border: #eac8c5;
+    --status-card-background: #fcf0ee;
+    --status-divider: #edd5d1;
+}
+
+.status-card.status-unknown {
+    --status-color: #8a651b;
+    --status-background: #f5e9bd;
+    --status-border: #e8d8a0;
+    --status-card-background: #fff8e3;
+    --status-divider: #ecdfb7;
 }
 
 .status-card.status-neutral {
     --status-color: var(--muted);
-    --status-background: #f0f3ef;
-    --status-border: #dfe5dc;
+    --status-background: #e5eae4;
+    --status-border: #d5ddd3;
+    --status-card-background: #f0f3ef;
+    --status-divider: #dce3d9;
 }
 
 .status-card::before {
@@ -305,7 +321,7 @@ h1 {
 
 .report-summary {
     padding-top: 19px;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--status-divider);
 }
 
 .summary-label {
@@ -469,6 +485,24 @@ h1 {
     text-align: center;
     font-size: 11px;
     color: var(--muted);
+}
+
+.submission-feedback {
+    margin: 16px 0 0;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+}
+
+/* No empty box before the first submission. */
+.submission-feedback:empty {
+    display: none;
 }
 
 /* =========================================
