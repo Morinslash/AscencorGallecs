@@ -26,6 +26,7 @@ module Program =
 
         Database.initialize databasePath
         
+        app.UseStaticFiles() |> ignore
         app.UseRouting() |> ignore
         app.UseRateLimiter() |> ignore
         

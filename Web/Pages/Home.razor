@@ -48,7 +48,12 @@
         }
     </main>
     <footer class="footer"><p>Hecho para los vecinos de Gallecs.</p>
-        <p>Información vecinal, no un servicio oficial de mantenimiento.</p><span class="prototype-label">Vista de ejemplo · Datos ficticios</span>
+        <p>Información vecinal, no un servicio oficial de mantenimiento.</p>
+
+        <span class="prototype-label">
+    Desarrollado por
+    <a href="mailto:longeardev@gmail.com">LongEar</a>
+</span>
     </footer>
 </div>
 
@@ -126,7 +131,7 @@
                 var retryAfter = response.Headers.RetryAfter?.Delta;
 
                 _submissionMessage = retryAfter is { } delay
-                    ? $"Has enviado demasiados avisos. Espera {Math.Max(1, (int)Math.Ceiling(delay.TotalSeconds))} segundos antes de volver a intentarlo."
+                    ? $"Has enviado demasiados avisos."
                     : "Has enviado demasiados avisos. Espera un momento antes de volver a intentarlo.";
 
                 return;
